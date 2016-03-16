@@ -12,7 +12,7 @@ import dispatch._
 import com.ning.http.client._
 import org.joda.time.DateTime
 import org.joda.time.format._
-
+import java.io.FileInputStream
 
 object HttpCalls {
   // A Task that runs a Dispatch request and returns the HTTP statusCode and the responseBody
@@ -33,6 +33,29 @@ object HttpCalls {
         case scala.util.Success(v) => register(\/-(v))
         case scala.util.Failure(ex) => register(-\/(ex))
       })(ex)
+    }
+  }
+
+  def getHttpWithCert(password: String, certFileName: String): Task[Http] = {
+    val inT = Task.delay { new FileInputStream(certFileName) }
+    inT map { in =>
+      getHttp.configure{ builder =>
+        val certPassword = password.toCharArray
+        // Load KeyStore from cert file
+        val ks = java.security.KeyStore.getInstance("PKCS12")
+        ks.load(in, certPassword)
+        in.close()
+        // KeyManager is initialized with the loaded certificates
+        val kmf = javax.net.ssl.KeyManagerFactory.getInstance("SunX509")
+        kmf.init(ks, certPassword)
+        // sslContext is initialized with the KeyManager above,
+        // default TrustManager and SecureRandom
+        val sslContext = javax.net.ssl.SSLContext.getInstance("TLS");
+        // null to use default TrustManager and SecureRandom
+        sslContext.init(kmf.getKeyManagers, null, null)
+
+        builder.setSSLContext(sslContext)
+      }
     }
   }
 
