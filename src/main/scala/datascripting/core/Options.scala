@@ -67,8 +67,6 @@ object Options {
     def dateOptional(name: String, description: String): Parser[Option[DateTime]] =
       fromStringOption(name, Formats.DashedFormat.parseDateTime(_), description)
 
-  
-
     def intOption(longName: String, description: String): Parser[Option[Int]] = {
       OptionalDef[Int](longName, s => scala.util.Try(s.toInt), description).toParser
     }
