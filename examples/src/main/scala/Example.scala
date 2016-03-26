@@ -67,7 +67,7 @@ object UserDB {
     val from = Formats.DashedFormat.print(fromDate)
     val to   = Formats.DashedFormat.print(toDate)
     sql"""
-      select id, createDate, name
+      select id, createDate, name from User
       where createDate > date($from) and createDate < date($to)
     """.query[User]
   }
